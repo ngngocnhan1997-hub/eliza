@@ -450,10 +450,18 @@ export const builtInValidators: Record<string, ValidationFunction> = {
     typeof value === "number" &&
     typeof args?.max === "number" &&
     value <= args.max,
-  numeric: (value) =>
-    typeof value === "number"
-      ? !Number.isNaN(value)
-      : typeof value === "string" && !Number.isNaN(parseFloat(value)),
+  numeric: (value) => {
+    if (typeof value === "number") {
+      return Number.isFinite(value);
+    }
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (trimmed.length === 0) return false;
+      const num = Number(trimmed);
+      return Number.isFinite(num);
+    }
+    return false;
+  },
   url: (value) => {
     if (typeof value !== "string") return false;
     try {
