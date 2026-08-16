@@ -96,30 +96,48 @@ function parseUntilValue(value: string): number {
   const dateOnly = value.match(/^(\d{4})(\d{2})(\d{2})$/);
   if (dateOnly) {
     // Date-only UNTIL: inclusive through the end of that UTC day.
-    const ms = Date.UTC(
-      Number(dateOnly[1]),
-      Number(dateOnly[2]) - 1,
-      Number(dateOnly[3]),
-      23,
-      59,
-      59,
-    );
+    const year = Number(dateOnly[1]);
+    const month = Number(dateOnly[2]);
+    const day = Number(dateOnly[3]);
+    const ms = Date.UTC(year, month - 1, day, 23, 59, 59);
     if (!Number.isFinite(ms)) invalidRecurrence(`UNTIL=${value}`);
+
+    // Validate that JavaScript didn't normalize the date (e.g. Feb 31 → Mar 3)
+    const d = new Date(ms);
+    if (
+      d.getUTCFullYear() !== year ||
+      d.getUTCMonth() !== month - 1 ||
+      d.getUTCDate() !== day
+    ) {
+      invalidRecurrence(`UNTIL=${value} (invalid date)`);
+    }
     return ms;
   }
   const dateTime = value.match(
     /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/,
   );
   if (dateTime) {
-    const ms = Date.UTC(
-      Number(dateTime[1]),
-      Number(dateTime[2]) - 1,
-      Number(dateTime[3]),
-      Number(dateTime[4]),
-      Number(dateTime[5]),
-      Number(dateTime[6]),
-    );
+    const year = Number(dateTime[1]);
+    const month = Number(dateTime[2]);
+    const day = Number(dateTime[3]);
+    const hour = Number(dateTime[4]);
+    const minute = Number(dateTime[5]);
+    const second = Number(dateTime[6]);
+    const ms = Date.UTC(year, month - 1, day, hour, minute, second);
     if (!Number.isFinite(ms)) invalidRecurrence(`UNTIL=${value}`);
+
+    // Validate that JavaScript didn't normalize any component
+    const d = new Date(ms);
+    if (
+      d.getUTCFullYear() !== year ||
+      d.getUTCMonth() !== month - 1 ||
+      d.getUTCDate() !== day ||
+      d.getUTCHours() !== hour ||
+      d.getUTCMinutes() !== minute ||
+      d.getUTCSeconds() !== second
+    ) {
+      invalidRecurrence(`UNTIL=${value} (invalid date/time)`);
+    }
     return ms;
   }
   invalidRecurrence(
