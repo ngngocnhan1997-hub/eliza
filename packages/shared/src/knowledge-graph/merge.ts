@@ -203,15 +203,16 @@ export function mergeEntities(args: {
     }
     for (const [key, attr] of Object.entries(source.attributes ?? {})) {
       const existing = attributes[key];
+      const dedupedEvidence = Array.from(
+        new Set([...(existing?.evidence ?? []), ...attr.evidence]),
+      );
+
       if (!existing || attr.confidence > existing.confidence) {
-        attributes[key] = attr;
-      } else if (attr.confidence === existing.confidence) {
-        attributes[key] = {
-          ...existing,
-          evidence: Array.from(
-            new Set([...existing.evidence, ...attr.evidence]),
-          ),
-        };
+        // Source wins: use source's metadata but preserve all evidence
+        attributes[key] = { ...attr, evidence: dedupedEvidence };
+      } else {
+        // Existing wins or tie: use existing's metadata but preserve all evidence
+        attributes[key] = { ...existing, evidence: dedupedEvidence };
       }
     }
     if (source.state.lastObservedAt) {
