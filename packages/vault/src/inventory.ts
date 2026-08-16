@@ -258,12 +258,28 @@ export async function listVaultInventory(
   const allKeys = await vault.list();
   const profileChildren = new Set<string>();
 
-  // First pass: identify keys that are themselves children of a
-  // profile-bearing parent. Pattern: <PARENT>.profile.<id>.
-  // We strip these so the inventory only ever exposes the parent.
+  // First pass: identify keys that are profile children by checking
+  // if their parent has metadata declaring them. This prevents hiding
+  // ordinary keys that happen to contain ".profile." in their name.
+  const metaCache = new Map<string, VaultEntryMetaRecord | null>();
+
   for (const k of allKeys) {
     const split = k.indexOf(`.${PROFILE_SEGMENT}.`);
-    if (split > 0) profileChildren.add(k);
+    if (split > 0) {
+      const parentKey = k.slice(0, split);
+      const profileId = k.slice(split + `.${PROFILE_SEGMENT}.`.length);
+
+      // Load parent metadata if not already cached
+      if (!metaCache.has(parentKey)) {
+        metaCache.set(parentKey, await readEntryMeta(vault, parentKey));
+      }
+
+      const parentMeta = metaCache.get(parentKey);
+      // Only mark as profile child if parent metadata declares this profile
+      if (parentMeta?.profiles?.some(p => p.id === profileId)) {
+        profileChildren.add(k);
+      }
+    }
   }
 
   // The set of parents we want to expose:
