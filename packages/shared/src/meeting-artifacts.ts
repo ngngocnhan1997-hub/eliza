@@ -412,6 +412,21 @@ export function validateMeetingArtifact(
   const bindingIds = collectIds(bindings, "entityBindings", errors);
   const spanIds = collectIds(spans, "transcriptSpans", errors);
 
+  // Validate IDs for grounded artifacts
+  const notes = Array.isArray(value.notes) ? value.notes : [];
+  const actionItems = Array.isArray(value.actionItems)
+    ? value.actionItems
+    : [];
+  const decisions = Array.isArray(value.decisions) ? value.decisions : [];
+  const evidenceArtifacts = Array.isArray(value.evidenceArtifacts)
+    ? value.evidenceArtifacts
+    : [];
+
+  collectIds(notes, "notes", errors);
+  collectIds(actionItems, "actionItems", errors);
+  collectIds(decisions, "decisions", errors);
+  collectIds(evidenceArtifacts, "evidenceArtifacts", errors);
+
   media.forEach((row, index) => {
     if (!isRecord(row)) return;
     if ("fileId" in row) {
