@@ -218,6 +218,7 @@ function parseContainerCommand(command: string): string[] {
 
     if (escaping) {
       current += char;
+      tokenStarted = true;  // Mark token as started when appending escaped char
       escaping = false;
       continue;
     }
