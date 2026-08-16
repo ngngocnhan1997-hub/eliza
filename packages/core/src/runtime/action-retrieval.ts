@@ -947,10 +947,16 @@ function buildCandidatePatterns(candidateActions: string[]): Array<{
 		}
 
 		if (candidateAction.includes("*")) {
+			// Build wildcard pattern by normalizing each literal segment
+			const segments = candidateAction.split("*");
+			const regexBody = segments
+				.map((seg) => {
+					const norm = normalizeActionName(seg);
+					return norm ? escapeRegex(norm) : "";
+				})
+				.join(".*");
 			patterns.push({
-				regex: new RegExp(
-					`^${escapeRegex(normalized).replace(/\\\*/g, ".*")}$`,
-				),
+				regex: new RegExp(`^${regexBody}$`),
 				namespace: normalized.split("_")[0],
 				score: 0.8,
 			});
