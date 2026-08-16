@@ -144,14 +144,23 @@ async function performFirstLaunchSetup(
     },
   );
 
-  let agentToken = "";
-  if (tokenResponse.ok) {
-    const tokenResult = (await tokenResponse.json()) as {
-      ok: boolean;
-      data?: { token: string };
+  if (!tokenResponse.ok) {
+    const body = (await tokenResponse.json().catch(() => ({}))) as {
+      error?: string;
     };
-    agentToken = tokenResult.data?.token ?? "";
+    throw new Error(`Failed to generate agent token: ${body.error || tokenResponse.statusText}`);
   }
+
+  const tokenResult = (await tokenResponse.json()) as {
+    ok: boolean;
+    data?: { token: string };
+  };
+
+  if (!tokenResult.ok || !tokenResult.data?.token) {
+    throw new Error("Agent token generation returned unexpected response");
+  }
+
+  const agentToken = tokenResult.data.token;
 
   // 4. Save credentials (never persist masterPassword to disk)
   const credentials: StewardCredentials = {
