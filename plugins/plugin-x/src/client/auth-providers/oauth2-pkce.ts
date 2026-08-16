@@ -244,7 +244,7 @@ export class OAuth2PKCEAuthProvider implements TwitterAuthProvider {
       const parsedCode = parsed.searchParams.get("code");
       const parsedState = parsed.searchParams.get("state");
       if (!parsedCode) throw new Error("Pasted URL did not include ?code=");
-      if (parsedState && parsedState !== state) {
+      if (parsedState !== state) {
         throw new Error("OAuth state mismatch");
       }
       code = parsedCode;

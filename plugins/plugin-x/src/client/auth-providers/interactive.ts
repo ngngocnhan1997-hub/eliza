@@ -109,7 +109,7 @@ export async function waitForLoopbackCallback(
           return;
         }
 
-        if (state && state !== expectedState) {
+        if (state !== expectedState) {
           res.writeHead(400, { "content-type": "text/plain" });
           res.end("State mismatch");
           finish(new Error("OAuth state mismatch"));
