@@ -16,9 +16,10 @@ function stripUrls(input: string): string {
 
 function stripThinkingAndMarkup(input: string): string {
 	let text = input;
-	text = text.replace(/<think\b[^>]*>[\s\S]*?<\/think>/gi, " ");
+	// Strip hidden blocks: matches either proper closing tag or end of input
+	// to handle unterminated blocks from truncated/streaming responses
 	text = text.replace(
-		/<(analysis|reasoning|tool_calls?|tools?)\b[^>]*>[\s\S]*?<\/\1>/gi,
+		/<(think|analysis|reasoning|tool_calls?|tools?)\b[^>]*>([\s\S]*?)(?:<\/\1>|$)/gi,
 		" ",
 	);
 	text = text.replace(/```[\s\S]*?```/g, " ");
